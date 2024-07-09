@@ -19,6 +19,8 @@ jobs:
     - name: Setting up
       run: |
         sudo apt install nlohmann-json3-dev libboost-filesystem-dev
+        git config --global user.name "Lukasz Kazmierczak" 
+        git config --global user.email "lukask84@o2.pl" 
     - name: Building target app
       run: |
         mkdir build && cd build && cmake .. && make
@@ -35,6 +37,8 @@ jobs:
     - name: Setting up
       run: |
         sudo apt install nlohmann-json3-dev libboost-filesystem-dev
+        git config --global user.name "Lukasz Kazmierczak" 
+        git config --global user.email "lukask84@o2.pl" 
     - name: Executing program
       run: |
         echo "Executing" 
@@ -50,6 +54,8 @@ jobs:
     - name: Setting up
       run: |
         sudo apt install nlohmann-json3-dev libboost-filesystem-dev
+        git config --global user.name "Lukasz Kazmierczak" 
+        git config --global user.email "lukask84@o2.pl" 
     - name: Building tests
       run: |
         cd tests && mkdir build && cd build && cmake .. && make
@@ -69,6 +75,8 @@ jobs:
     - name: Setting up
       run: |
         sudo apt install nlohmann-json3-dev libboost-filesystem-dev lcov
+        git config --global user.name "Lukasz Kazmierczak" 
+        git config --global user.email "lukask84@o2.pl" 
         cd tests && git clone https://github.com/lukaskaz/coverage-checker.git
     - name: Preparing tests
       run: |
