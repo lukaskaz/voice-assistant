@@ -1,0 +1,86 @@
+name: Check build/run/tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+      # as by default
+      types: [opened, synchronize, reopened]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-24.04
+    environment: production
+
+    steps:
+    - name: Checking out
+      uses: actions/checkout@v4
+    - name: Setting up
+      run: |
+        sudo apt install nlohmann-json3-dev libboost-filesystem-dev libcurl4-openssl-dev
+        git config --global user.name "Lukasz Kazmierczak" 
+        git config --global user.email "lukask84@o2.pl" 
+    - name: Building target app
+      run: |
+        mkdir build && cd build && cmake .. && make
+      
+  execution:
+    name: Execution
+    needs: [build]
+    runs-on: ubuntu-24.04
+    environment: production
+
+    steps:
+    - name: Checking out
+      uses: actions/checkout@v4
+    - name: Setting up
+      run: |
+        sudo apt install nlohmann-json3-dev libboost-filesystem-dev libcurl4-openssl-dev
+        git config --global user.name "Lukasz Kazmierczak" 
+        git config --global user.email "lukask84@o2.pl" 
+    - name: Executing program
+      run: |
+        echo "Executing" 
+
+  test:
+    name: Test
+    runs-on: ubuntu-24.04
+    environment: test
+
+    steps:
+    - name: Checking out
+      uses: actions/checkout@v4
+    - name: Setting up
+      run: |
+        sudo apt install nlohmann-json3-dev libboost-filesystem-dev libcurl4-openssl-dev
+        git config --global user.name "Lukasz Kazmierczak" 
+        git config --global user.email "lukask84@o2.pl" 
+    - name: Building tests
+      run: |
+        cd tests && mkdir build && cd build && cmake .. && make
+    - name: Running tests
+      run: |
+        ctest --output-on-failure --test-dir tests/build/
+
+  tests-coverage:
+    name: Coverage
+    needs: [test]
+    runs-on: ubuntu-24.04
+    environment: test
+
+    steps:
+    - name: Checking out
+      uses: actions/checkout@v4
+    - name: Setting up
+      run: |
+        sudo apt install nlohmann-json3-dev libboost-filesystem-dev libcurl4-openssl-dev lcov
+        git config --global user.name "Lukasz Kazmierczak" 
+        git config --global user.email "lukask84@o2.pl" 
+        cd tests && git clone https://github.com/lukaskaz/coverage-checker.git
+    - name: Preparing tests
+      run: |
+        cd tests && mkdir build && cd build && cmake .. && make
+    - name: Running coverage checker
+      run: |
+        cd tests/coverage-checker && ./run.sh ../build
