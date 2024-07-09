@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gptchat.hpp"
+#include "shellcommand.hpp"
 #include "speechtotext.hpp"
 #include "texttospeech.hpp"
 
@@ -8,7 +9,7 @@
 #include <memory>
 #include <unordered_map>
 
-namespace voiceassistant
+namespace vassist
 {
 
 class VoiceAssistant
@@ -16,7 +17,8 @@ class VoiceAssistant
   public:
     VoiceAssistant(std::shared_ptr<tts::TextToVoiceIf>,
                    std::shared_ptr<stt::TextFromVoiceIf>,
-                   std::shared_ptr<gpt::GptChatIf>);
+                   std::shared_ptr<gpt::GptChatIf>,
+                   std::shared_ptr<shell::ShellCommand>);
 
     void run() const;
 
@@ -28,6 +30,7 @@ class VoiceAssistant
     std::shared_ptr<tts::TextToVoiceIf> tts;
     std::shared_ptr<stt::TextFromVoiceIf> stt;
     std::shared_ptr<gpt::GptChatIf> chat;
+    std::shared_ptr<shell::ShellCommand> shell;
 
     void intialize();
     void addtocallbacks(const std::string&, callback&&);
@@ -47,4 +50,4 @@ class VoiceAssistantFactory
     static std::shared_ptr<VoiceAssistant> create();
 };
 
-} // namespace voiceassistant
+} // namespace vassist

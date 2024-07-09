@@ -13,14 +13,14 @@ class TestVoiceAssistant :
     public TestWithParam<std::pair<std::string, uint32_t>>
 {
   protected:
-    std::shared_ptr<CommandsMock> commandMock =
-        std::make_shared<NiceMock<CommandsMock>>();
     std::shared_ptr<TextToVoiceMock> ttsMock =
         std::make_shared<NiceMock<TextToVoiceMock>>();
     std::shared_ptr<TextFromVoiceMock> sttMock =
         std::make_shared<NiceMock<TextFromVoiceMock>>();
     std::shared_ptr<GptChatMock> chatMock =
         std::make_shared<NiceMock<GptChatMock>>();
+    std::shared_ptr<ShellMock> shellMock =
+        std::make_shared<NiceMock<ShellMock>>();
 
   protected:
     const uint32_t defSttQuality{90};
@@ -34,7 +34,7 @@ TEST_P(TestVoiceAssistant, initialTest1)
         .Times(2)
         .WillOnce(Return(std::make_pair(command, defSttQuality)))
         .WillOnce(Return(std::make_pair("zakończ", defSttQuality)));
-    voiceassistant::VoiceAssistant(ttsMock, sttMock, chatMock).run();
+    vassist::VoiceAssistant(ttsMock, sttMock, chatMock, shellMock).run();
 }
 
 auto getTestingValues()
@@ -43,6 +43,7 @@ auto getTestingValues()
 
     values.emplace_back("powtórz", 4);
     values.emplace_back("zaśpiewaj", 4);
+    values.emplace_back("przetłumacz", 4);
     values.emplace_back("czat", 4);
     values.emplace_back("zrzuć", 4);
     values.emplace_back("pomoc", 12);
@@ -50,5 +51,5 @@ auto getTestingValues()
     return values;
 }
 
-INSTANTIATE_TEST_CASE_P(_, TestVoiceAssistant,
-                        ::testing::ValuesIn(getTestingValues()));
+INSTANTIATE_TEST_SUITE_P(_, TestVoiceAssistant,
+                         ::testing::ValuesIn(getTestingValues()));
