@@ -30,7 +30,7 @@ add_dependencies(${PROJECT_NAME} libtts)
 add_dependencies(${PROJECT_NAME} libstt)
 add_dependencies(${PROJECT_NAME} libgptchat)
 add_dependencies(${PROJECT_NAME} libshellcmd)
-target_link_libraries(${PROJECT_NAME} gtest gmock Boost::filesystem tts stt gptchat shellcmd)
+target_link_libraries(${PROJECT_NAME} gtest gmock tts stt gptchat shellcmd)
 
 add_test(
     NAME ${PROJECT_NAME}
