@@ -18,7 +18,7 @@ jobs:
       uses: actions/checkout@v4
     - name: Setting up
       run: |
-        sudo apt install nlohmann-json3-dev libboost-filesystem-dev
+        sudo apt install nlohmann-json3-dev libboost-filesystem-dev libcurl4-openssl-dev
         git config --global user.name "Lukasz Kazmierczak" 
         git config --global user.email "lukask84@o2.pl" 
     - name: Building target app
@@ -36,7 +36,7 @@ jobs:
       uses: actions/checkout@v4
     - name: Setting up
       run: |
-        sudo apt install nlohmann-json3-dev libboost-filesystem-dev
+        sudo apt install nlohmann-json3-dev libboost-filesystem-dev libcurl4-openssl-dev
         git config --global user.name "Lukasz Kazmierczak" 
         git config --global user.email "lukask84@o2.pl" 
     - name: Executing program
@@ -53,7 +53,7 @@ jobs:
       uses: actions/checkout@v4
     - name: Setting up
       run: |
-        sudo apt install nlohmann-json3-dev libboost-filesystem-dev
+        sudo apt install nlohmann-json3-dev libboost-filesystem-dev libcurl4-openssl-dev
         git config --global user.name "Lukasz Kazmierczak" 
         git config --global user.email "lukask84@o2.pl" 
     - name: Building tests
@@ -74,7 +74,7 @@ jobs:
       uses: actions/checkout@v4
     - name: Setting up
       run: |
-        sudo apt install nlohmann-json3-dev libboost-filesystem-dev lcov
+        sudo apt install nlohmann-json3-dev libboost-filesystem-dev libcurl4-openssl-dev lcov
         git config --global user.name "Lukasz Kazmierczak" 
         git config --global user.email "lukask84@o2.pl" 
         cd tests && git clone https://github.com/lukaskaz/coverage-checker.git
@@ -84,4 +84,3 @@ jobs:
     - name: Running coverage checker
       run: |
         cd tests/coverage-checker && ./run.sh ../build
-
