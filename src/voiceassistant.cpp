@@ -1,7 +1,5 @@
 #include "voiceassistant.hpp"
 
-#include "shellcommand.hpp"
-
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
@@ -9,14 +7,15 @@
 #include <iostream>
 #include <ranges>
 
-namespace voiceassistant
+namespace vassist
 {
 
 VoiceAssistant::VoiceAssistant(std::shared_ptr<tts::TextToVoiceIf> tts,
                                std::shared_ptr<stt::TextFromVoiceIf> stt,
-                               std::shared_ptr<gpt::GptChatIf> chat) :
+                               std::shared_ptr<gpt::GptChatIf> chat,
+                               std::shared_ptr<shell::ShellCommand> shell) :
     tts{tts},
-    stt{stt}, chat{chat}
+    stt{stt}, chat{chat}, shell{shell}
 {
     intialize();
 }
@@ -63,36 +62,37 @@ inline void VoiceAssistant::intialize()
                        },
                        tts));
 
-    addtocallbacks("przetłumacz",
-                   std::bind(
-                       [](std::shared_ptr<tts::TextToVoiceIf> tts,
-                          const std::string& text) {
-                           std::cout << "I translate: " << text << '\n';
-                           std::string translate =
-                               "wget -U Mozilla/5.0 -qO - "
-                               "\"http://translate.googleapis.com/translate_a/"
-                               "single?client=gtx&sl=pl&tl=de&dt=t&q=" +
-                               text + "\"";
+    addtocallbacks(
+        "przetłumacz",
+        std::bind(
+            [](std::shared_ptr<tts::TextToVoiceIf> tts,
+               std::shared_ptr<shell::ShellCommand> shell,
+               const std::string& text) {
+                std::cout << "Will translate: " << std::quoted(text) << '\n';
+                std::string translate =
+                    "wget -U Mozilla/5.0 -qO - "
+                    "\"http://translate.googleapis.com/translate_a/"
+                    "single?client=gtx&sl=pl&tl=de&dt=t&q=" +
+                    text + "\"";
 
-                           if (std::vector<std::string> output;
-                               !BashCommand().run(std::move(translate), output))
-                           {
-                               using json = nlohmann::json;
+                if (std::vector<std::string> output;
+                    !text.empty() && !shell->run(std::move(translate), output))
+                {
+                    using json = nlohmann::json;
 
-                               json data = json::parse(output.at(0));
-                               std::string translated = data[0][0][0];
-                               std::cout << "Translated: " << translated
-                                         << '\n';
-                               tts::TextToVoiceFactory::create(
-                                   translated, tts::language::german);
-                           }
-                           else
-                           {
-                               tts->speak("Nie moge przetłumaczyć");
-                           }
-                           return true;
-                       },
-                       tts, std::placeholders::_1));
+                    json data = json::parse(output.at(0));
+                    std::string translated = data[0][0][0];
+                    std::cout << "Translated: " << translated << '\n';
+                    tts::TextToVoiceFactory::create(translated,
+                                                    tts::language::german);
+                }
+                else
+                {
+                    tts->speak("Nie moge przetłumaczyć");
+                }
+                return true;
+            },
+            tts, shell, std::placeholders::_1));
 
     addtocallbacks(
         "czat",
@@ -174,13 +174,11 @@ inline std::pair<std::string, std::string>
     {
         key = request.substr(0, pos);
         commands.contains(key) ? request.erase(0, pos + 1) : key = defaultkey;
-    }
-    else
-    {
-        key = commands.contains(request) ? request : defaultkey;
+        return std::make_pair(key, request);
     }
 
-    return std::make_pair(key, request);
+    key = commands.contains(request) ? request : defaultkey;
+    return std::make_pair(key, "");
 }
 
 std::shared_ptr<VoiceAssistant> VoiceAssistantFactory::create()
@@ -188,8 +186,9 @@ std::shared_ptr<VoiceAssistant> VoiceAssistantFactory::create()
     auto tts = tts::TextToVoiceFactory::create(tts::language::polish);
     auto stt = stt::TextFromVoiceFactory::create(stt::language::polish);
     auto chat = gpt::GptChatFactory::create();
+    auto shell = std::make_shared<shell::BashCommand>();
 
-    return std::make_shared<VoiceAssistant>(tts, stt, chat);
+    return std::make_shared<VoiceAssistant>(tts, stt, chat, shell);
 }
 
-} // namespace voiceassistant
+} // namespace vassist

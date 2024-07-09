@@ -4,7 +4,7 @@
 
 #include <gmock/gmock.h>
 
-class CommandsMock : public ShellCommand
+class ShellMock : public shell::ShellCommand
 {
   public:
     MOCK_METHOD(int, run, (std::string &&), (override));

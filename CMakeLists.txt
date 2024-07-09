@@ -30,4 +30,5 @@ target_link_libraries(${PROJECT_NAME}
     stt
     gptchat
     shellcmd
+    ${Boost_LIBRARIES}
 )
