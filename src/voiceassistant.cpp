@@ -42,92 +42,67 @@ void VoiceAssistant::run() const
 
 inline void VoiceAssistant::intialize()
 {
-    addtocallbacks("powtórz",
-                   std::bind(
-                       [](std::shared_ptr<tts::TextToVoiceIf> tts,
-                          const std::string& text) {
-                           std::cout << "Speaking your words: " << text << '\n';
-                           tts->speak(text);
-                           return true;
-                       },
-                       tts, std::placeholders::_1));
+    addtocallbacks("powtórz", [this](const std::string& text) {
+        std::cout << "Speaking your words: " << text << '\n';
+        tts->speak(text);
+        return true;
+    });
 
-    addtocallbacks("zaśpiewaj",
-                   std::bind(
-                       [](std::shared_ptr<tts::TextToVoiceIf> tts) {
-                           std::cout << ":))) " << '\n';
-                           tts->speak("Przez te oczy zielone.... "
-                                      "zieloneeee oooooszalałeeeeeem");
-                           return true;
-                       },
-                       tts));
+    addtocallbacks("zaśpiewaj", std::bind([this]() {
+                       std::cout << ":))) " << '\n';
+                       tts->speak("Przez te oczy zielone.... "
+                                  "zieloneeee oooooszalałeeeeeem");
+                       return true;
+                   }));
 
-    addtocallbacks(
-        "przetłumacz",
-        std::bind(
-            [](std::shared_ptr<tts::TextToVoiceIf> tts,
-               std::shared_ptr<shell::ShellCommand> shell,
-               const std::string& text) {
-                std::cout << "Will translate: " << std::quoted(text) << '\n';
-                std::string translate =
-                    "wget -U Mozilla/5.0 -qO - "
-                    "\"http://translate.googleapis.com/translate_a/"
-                    "single?client=gtx&sl=pl&tl=de&dt=t&q=" +
-                    text + "\"";
+    addtocallbacks("przetłumacz", [this](const std::string& text) {
+        std::cout << "Will translate: " << std::quoted(text) << '\n';
+        std::string translate = "wget -U Mozilla/5.0 -qO - "
+                                "\"http://translate.googleapis.com/translate_a/"
+                                "single?client=gtx&sl=pl&tl=de&dt=t&q=" +
+                                text + "\"";
 
-                if (std::vector<std::string> output;
-                    !text.empty() && !shell->run(std::move(translate), output))
-                {
-                    using json = nlohmann::json;
+        if (std::vector<std::string> output;
+            !text.empty() && !shell->run(std::move(translate), output))
+        {
+            using json = nlohmann::json;
 
-                    json data = json::parse(output.at(0));
-                    std::string translated = data[0][0][0];
-                    std::cout << "Translated: " << translated << '\n';
-                    tts::TextToVoiceFactory::create(translated,
-                                                    tts::language::german);
-                }
-                else
-                {
-                    tts->speak("Nie moge przetłumaczyć");
-                }
-                return true;
+            json data = json::parse(output.at(0));
+            std::string translated = data[0][0][0];
+            std::cout << "Translated: " << translated << '\n';
+            tts->speak(translated, tts::language::german);
+        }
+        else
+        {
+            tts->speak("Nie moge przetłumaczyć");
+        }
+        return true;
+    });
+
+    addtocallbacks("czat", [this](const std::string& text) {
+        auto [fullanswer, shortanswer] = chat->run(
+            text,
+            [this, &text]() {
+                std::cout << "Checking question: " << text << '\n';
+                tts->speak("Już sprawdzam");
             },
-            tts, shell, std::placeholders::_1));
-
-    addtocallbacks(
-        "czat",
-        std::bind(
-            [](std::shared_ptr<tts::TextToVoiceIf> tts,
-               std::shared_ptr<gpt::GptChatIf> chat, const std::string& text) {
-                auto [fullanswer, shortanswer] = chat->run(
-                    text,
-                    [tts, &text]() {
-                        std::cout << "Checking question: " << text << '\n';
-                        tts->speak("Już sprawdzam");
-                    },
-                    [tts]() {
-                        std::cout << "Wait...\n";
-                        tts->speak("Jeszcze chwila");
-                    },
-                    3);
-
-                std::cout << "Full answer:\n" << fullanswer << '\n';
-                std::cout << "Short answer:\n" << shortanswer << '\n';
-                shortanswer.empty() ? tts->speak(fullanswer)
-                                    : tts->speak(shortanswer);
-                return true;
+            [this]() {
+                std::cout << "Wait...\n";
+                tts->speak("Jeszcze chwila");
             },
-            tts, chat, std::placeholders::_1));
+            3);
 
-    addtocallbacks("zrzuć",
-                   std::bind(
-                       [](std::shared_ptr<tts::TextToVoiceIf> tts,
-                          std::shared_ptr<gpt::GptChatIf> chat) {
-                           std::cout << chat->history() << "\n";
-                           tts->speak("Zrzucam historie GPT czatu na konsole");
-                           return true;
-                       },
-                       tts, chat));
+        std::cout << "Full answer:\n" << fullanswer << '\n';
+        std::cout << "Short answer:\n" << shortanswer << '\n';
+        shortanswer.empty() ? tts->speak(fullanswer) : tts->speak(shortanswer);
+        return true;
+    });
+
+    addtocallbacks("zrzuć", std::bind([this]() {
+                       std::cout << chat->history() << "\n";
+                       tts->speak("Zrzucam historie GPT czatu na konsole");
+                       return true;
+                   }));
 
     addtocallbacks(
         "pomoc",

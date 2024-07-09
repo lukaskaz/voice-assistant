@@ -10,7 +10,7 @@
 using namespace testing;
 
 class TestVoiceAssistant :
-    public TestWithParam<std::pair<std::string, uint32_t>>
+    public TestWithParam<std::tuple<std::string, uint32_t, uint32_t>>
 {
   protected:
     std::shared_ptr<TextToVoiceMock> ttsMock =
@@ -26,10 +26,16 @@ class TestVoiceAssistant :
     const uint32_t defSttQuality{90};
 };
 
-TEST_P(TestVoiceAssistant, initialTest1)
+TEST_P(TestVoiceAssistant, testCheckAllCommandsCallbacksWorkAsExpected)
 {
-    const auto& [command, speaknum] = GetParam();
-    EXPECT_CALL(*ttsMock, speak(_)).Times(speaknum);
+    const auto& [command, speakoneargnum, speaktwoargsnum] = GetParam();
+    std::vector<std::string> translatedjson = {
+        "[[[\"Es ist spät\",\"jest "
+        "późno\",null,null,11]],null,\"pl\",null,null,null,null,[]]"};
+    ON_CALL(*shellMock, run(_, _))
+        .WillByDefault(DoAll(SetArgReferee<1>(translatedjson), Return(0)));
+    EXPECT_CALL(*ttsMock, speak(_)).Times(speakoneargnum);
+    EXPECT_CALL(*ttsMock, speak(_, _)).Times(speaktwoargsnum);
     EXPECT_CALL(*sttMock, listen())
         .Times(2)
         .WillOnce(Return(std::make_pair(command, defSttQuality)))
@@ -39,14 +45,15 @@ TEST_P(TestVoiceAssistant, initialTest1)
 
 auto getTestingValues()
 {
-    std::vector<std::pair<std::string, uint32_t>> values;
+    std::vector<std::tuple<std::string, uint32_t, uint32_t>> values;
 
-    values.emplace_back("powtórz", 4);
-    values.emplace_back("zaśpiewaj", 4);
-    values.emplace_back("przetłumacz", 4);
-    values.emplace_back("czat", 4);
-    values.emplace_back("zrzuć", 4);
-    values.emplace_back("pomoc", 12);
+    values.emplace_back("powtórz", 4, 0);
+    values.emplace_back("zaśpiewaj", 4, 0);
+    values.emplace_back("przetłumacz", 4, 0);
+    values.emplace_back("przetłumacz tekst", 3, 1);
+    values.emplace_back("czat", 4, 0);
+    values.emplace_back("zrzuć", 4, 0);
+    values.emplace_back("pomoc", 12, 0);
 
     return values;
 }
