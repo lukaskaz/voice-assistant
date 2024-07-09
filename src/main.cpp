@@ -22,7 +22,7 @@ int main()
     std::signal(SIGINT, signalHandler);
     try
     {
-        auto assitant = VoiceAssistantFactory::create();
+        auto assitant = voiceassistant::VoiceAssistantFactory::create();
         assitant->run();
     }
     catch (std::exception& err)
